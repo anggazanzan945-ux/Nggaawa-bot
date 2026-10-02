@@ -1,15 +1,16 @@
+
 {
-  "name": "base-resbot",
+  "name": "nggaawa-bot",
   "version": "1.0.4",
-  "description": "Base for bot whatsapp with baileys library",
+  "description": "Bot WhatsApp milik Angga",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/autoresbot/base-resbot.git"
+    "url": "git+https://github.com/anggazanzan945-ux/Nggaawa-bot.git"
   },
   "bugs": {
-    "url": "https://github.com/autoresbot/base-resbot/issues"
+    "url": "https://github.com/anggazanzan945-ux/Nggaawa-bot/issues"
   },
-  "homepage": "https://github.com/autoresbot/base-resbot#readme",
+  "homepage": "https://github.com/anggazanzan945-ux/Nggaawa-bot#readme",
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -23,11 +24,9 @@
   "keywords": [
     "bot",
     "whatsapp",
-    "baileys",
-    "autoresbot",
-    "basewa"
+    "baileys"
   ],
-  "author": "azhari creative",
+  "author": "Angga",
   "license": "ISC",
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
