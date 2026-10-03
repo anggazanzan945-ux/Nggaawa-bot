@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Data Absen</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+        }
+        h2 {
+            text-align: center;
+            color: #0f2027;
+            margin-bottom: 20px;
+        }
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: #e0e0e0;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .tab-btn.active {
+            background: #0f2027;
+            color: white;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #444;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        button:hover { transform: translateY(-2px); }
+        .btn-primary { background: #0f2027; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-warning { background: #ffc107; color: #333; }
+        .karyawan-item, .absen-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .karyawan-item:last-child, .absen-item:last-child { border-bottom: none; }
+        .absen-foto {
+            width: 70px;
+            height: 70px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-bottom: 5px;
+        }
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: 600;
+        }
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-error { background: #f8d7da; color: #721c24; }
+        .filter-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .hidden { display: none !important; }
+        .status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-masuk { background: #d4edda; color: #155724; }
+        .status-pulang { background: #fff3cd; color: #856404; }
+        .btn-kecil { padding: 6px 12px; font-size: 13px; }
+        .link-kembali {
+            display: inline-block;
+            margin-top: 15px;
+            color: #0f2027;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+<!-- LOGIN ADMIN -->
+<div class="container" id="login-area">
+    <div class="card">
+        <h2>🔑 Login Admin</h2>
+        <div class="form-group">
+            <label>PIN Admin</label>
+            <input type="password" id="pin-admin" placeholder="Masukkan PIN Admin">
+        </div>
+        <button class="btn-primary" onclick="loginAdmin()">🔓 Masuk</button>
+        <div id="pesan-login"></div>
+        <a href="absen.html" class="link-kembali">← Kembali ke Halaman Absen</a>
+    </div>
+</div>
+
+<!-- HALAMAN UTAMA ADMIN -->
+<div class="container hidden" id="admin-area">
+    <div class="card">
+        <h2>⚙️ Panel Admin</h2>
+        <button class="btn-danger" style="float:right; margin-bottom:15px;" onclick="keluarAdmin()">🚪 Keluar</button>
+        <div style="clear:both;"></div>
+
+        <div class="tab-buttons">
+            <button class="tab-btn active" onclick="gantiTab('daftar')">👥 Daftar Karyawan</button>
+            <button class="tab-btn" onclick="gantiTab('absen')">📊 Data Absen</button>
+        </div>
+
+        <!-- FORM TAMBAH KARYAWAN -->
+        <div id="tab-daftar">
+            <h3>Tambah Karyawan Baru</h3>
+            <div class="form-group">
+                <label>Nama Lengkap</label>
+                <input type="text" id="nama-baru" placeholder="Masukkan nama lengkap">
+            </div>
+            <div class="form-group">
+                <label>PIN (4-6 digit)</label>
+                <input type="text" id="pin-baru" placeholder="Buat PIN untuk karyawan">
+            </div>
+            <button class="btn-success" onclick="tambahKaryawan()">➕ Daftarkan Karyawan</button>
+            <div id="pesan-karyawan"></div>
+            <hr style="margin:20px 0; border:none; border-top:1px solid #eee;">
+            
+            <h3>Daftar Karyawan</h3>
+            <div id="list-karyawan"></div>
+        </div>
+
+        <!-- DATA ABSEN -->
+        <div id="tab-absen" class="hidden">
+            <div class="filter-box">
+                <input type="date" id="filter-tanggal" onchange="tampilkanDataAbsen()">
+                <input type="text" id="filter-nama" placeholder="Cari nama..." oninput="tampilkanDataAbsen()">
+                <button class="btn-primary btn-kecil" onclick="resetFilter()">Reset</button>
+            </div>
+            <button class="btn-success" style="margin-bottom:15px;" onclick="exportData()">📥 Export Data</button>
+            <div id="list-absen"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const PIN_ADMIN = 'admin123'; // Ganti PIN Admin kamu!
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (!localStorage.getItem('daftarKaryawan')) {
+        localStorage.setItem('daftarKaryawan', JSON.stringify([
+            { nama: 'Budi', pin: '1234' },
+            { nama: 'Siti', pin: '1234' }
+        ]));
+    }
+});
+
+// LOGIN
+function loginAdmin() {
+    const pin = document.getElementById('pin-admin').value;
+    if (pin === PIN_ADMIN) {
+        document.getElementById('login-area').classList.add('hidden');
+        document.getElementById('admin-area').classList.remove('hidden');
+        tampilkanDaftarKaryawan();
+        tampilkanDataAbsen();
+    } else {
+        document.getElementById('pesan-login').innerHTML = `<div class="alert alert-error">❌ PIN salah!</div>`;
+    }
+}
+
+function keluarAdmin() {
+    document.getElementById('login-area').classList.remove('hidden');
+    document.getElementById('admin-area').classList.add('hidden');
+    document.getElementById('pin-admin').value = '';
+}
+
+// GANTI TAB
+function gantiTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('tab-daftar').classList.toggle('hidden', tab !== 'daftar');
+    document.getElementById('tab-absen').classList.toggle('hidden', tab !== 'absen');
+    if (tab === 'absen') tampilkanDataAbsen();
+    else tampilkanDaftarKaryawan();
+}
+
+// KARYAWAN
+function tampilkanDaftarKaryawan() {
+    const karyawan = JSON.parse(localStorage.getItem('daftarKaryawan') || '[]');
+    const area = document.getElementById('list-karyawan');
+    if (karyawan.length === 0) {
+        area.innerHTML = '<p style="color:#888; text-align:center; padding:20px;">Belum ada karyawan</p>';
+        return;
+    }
+    area.innerHTML = karyawan.map((k, i) => `
+        <div class="karyawan-item">
+            <strong>${k.nama}</strong><br>
+            PIN: ${'•'.repeat(k.pin.length)}<br>
+            <button class="btn-danger btn-kecil" style="margin-top:5px;" onclick="hapusKaryawan(${i})">🗑️ Hapus</button>
+        </div>
+    `).join('');
+}
+
+function tambahKaryawan() {
+    const nama = document.getElementById('nama-baru').value.trim();
+    const pin = document.getElementById('pin-baru').value.trim();
+    const pesan = document.getElementById('pesan-karyawan');
+
+    if (!nama || !pin) {
+        pesan.innerHTML = `<div class="alert alert-error">⚠️ Lengkapi nama dan PIN!</div>`;
+        return;
+    }
+
+    let karyawan = JSON.parse(localStorage.getItem('daftarKaryawan') || '[]');
+    if (karyawan.find(k => k.nama.toLowerCase() === nama.toLowerCase())) {
+        pesan.innerHTML = `<div class="alert alert-error">⚠️ Nama sudah terdaftar!</div>`;
+        return;
+    }
+
+    karyawan.push({ nama, pin });
+    localStorage.setItem('daftarKaryawan', JSON.stringify(karyawan));
+    
+    pesan.innerHTML = `<div class="alert alert-success">✅ Karyawan berhasil ditambahkan!</div>`;
+    document.getElementById('nama-baru').value = '';
+    document.getElementById('pin-baru').value = '';
+    tampilkanDaftarKaryawan();
+    setTimeout(() => pesan.innerHTML = '', 3000);
+}
+
+function hapusKaryawan(index) {
+    if (!confirm('Yakin ingin menghapus?')) return;
+    let karyawan = JSON.parse(localStorage.getItem('daftarKaryawan') || '[]');
+    karyawan.splice(index, 1);
+    localStorage.setItem('daftarKaryawan', JSON.stringify(karyawan));
+    tampilkanDaftarKaryawan();
+}
+
+// DATA ABSEN
+function tampilkanDataAbsen() {
+    const tanggal = document.getElementById('filter-tanggal').value;
+    const namaCari = document.getElementById('filter-nama').value.toLowerCase();
+    let data = JSON.parse(localStorage.getItem('dataAbsen') || '[]');
+
+    if (tanggal) data = data.filter(d => d.tanggal === tanggal);
+    if (namaCari) data = data.filter(d => d.nama.toLowerCase().includes(namaCari));
+
+    const area = document.getElementById('list-absen');
+    if (data.length === 0) {
+        area.innerHTML = '<p style="color:#888; text-align:center; padding:20px;">📭 Belum ada data absen</p>';
+        return;
+    }
+
+    area.innerHTML = data.map(d => `
+        <div class="absen-item">
+            <img src="${d.foto}" class="absen-foto" alt="Foto">
+            <div>
+                <strong>${d.nama}</strong>
+                <span class="status status-${d.jenis}">${d.jenis.toUpperCase()}</span><br>
+                📅 ${d.hari} · 🕐 ${d.jam}<br>
+                📍 ${d.lokasi.lat}, ${d.lokasi.lng}
+            </div>
+        </div>
+    `).join('');
+}
+
+function resetFilter() {
+    document.getElementById('filter-tanggal').value = '';
+    document.getElementById('filter-nama').value = '';
+    tampilkanDataAbsen();
+}
+
+function exportData() {
+    const data = localStorage.getItem('dataAbsen') || '[]';
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `data-absen-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+}
+</script>
+</body>
+</html>

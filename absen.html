@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absen Karyawan</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #1a73e8 0%, #34a853 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+        h2 {
+            text-align: center;
+            color: #1a73e8;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #444;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #1a73e8;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        button:hover { transform: translateY(-2px); }
+        .btn-primary { background: #1a73e8; color: white; }
+        .btn-success { background: #34a853; color: white; margin-top: 10px; }
+        #video, #foto-preview {
+            width: 100%;
+            border-radius: 10px;
+            margin: 10px 0;
+            background: #eee;
+        }
+        .lokasi-box {
+            background: #f0f8ff;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #1a73e8;
+            margin-bottom: 15px;
+        }
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            font-weight: 600;
+        }
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-error { background: #f8d7da; color: #721c24; }
+        .link-admin {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .link-admin a {
+            color: #1a73e8;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h2>📋 Absen Karyawan</h2>
+
+            <div class="form-group">
+                <label>Nama Karyawan</label>
+                <select id="nama" required>
+                    <option value="">-- Pilih Nama Anda --</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>PIN Anda</label>
+                <input type="password" id="pin" placeholder="Masukkan PIN">
+            </div>
+
+            <div class="form-group">
+                <label>Ambil Foto Wajah</label>
+                <video id="video" autoplay playsinline></video>
+                <button class="btn-success" onclick="ambilFoto()">📸 Ambil Foto</button>
+                <img id="foto-preview" class="hidden" alt="Foto" />
+            </div>
+
+            <div class="form-group">
+                <label>Lokasi Anda</label>
+                <div class="lokasi-box" id="lokasi-teks">📍 Mendeteksi lokasi...</div>
+                <button class="btn-primary" onclick="dapatkanLokasi()">🔄 Refresh Lokasi</button>
+            </div>
+
+            <div class="form-group">
+                <label>Jenis Absen</label>
+                <select id="jenis-absen">
+                    <option value="masuk">✅ Absen Masuk</option>
+                    <option value="pulang">⏰ Absen Pulang</option>
+                </select>
+            </div>
+
+            <button class="btn-primary" onclick="simpanAbsen()">✅ Simpan Absen</button>
+            <div id="pesan"></div>
+
+            <div class="link-admin">
+                <a href="admin.html">🔑 Masuk sebagai Admin</a>
+            </div>
+        </div>
+    </div>
+
+<script>
+let fotoBase64 = '';
+let lokasiSaatIni = { lat: '', lng: '' };
+
+document.addEventListener('DOMContentLoaded', () => {
+    mulaiKamera();
+    dapatkanLokasi();
+    muatDaftarKaryawan();
+});
+
+function muatDaftarKaryawan() {
+    const karyawan = JSON.parse(localStorage.getItem('daftarKaryawan') || '[]');
+    const select = document.getElementById('nama');
+    select.innerHTML = '<option value="">-- Pilih Nama Anda --</option>';
+    karyawan.forEach(k => {
+        const opt = document.createElement('option');
+        opt.value = k.nama;
+        opt.textContent = k.nama;
+        select.appendChild(opt);
+    });
+}
+
+async function mulaiKamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+        document.getElementById('video').srcObject = stream;
+    } catch (e) { console.log('Kamera tidak tersedia'); }
+}
+
+function ambilFoto() {
+    const video = document.getElementById('video');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    fotoBase64 = canvas.toDataURL('image/jpeg', 0.8);
+    document.getElementById('foto-preview').src = fotoBase64;
+    document.getElementById('foto-preview').classList.remove('hidden');
+    document.getElementById('video').classList.add('hidden');
+}
+
+function dapatkanLokasi() {
+    const teks = document.getElementById('lokasi-teks');
+    teks.textContent = '📍 Mendeteksi lokasi...';
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                lokasiSaatIni.lat = pos.coords.latitude;
+                lokasiSaatIni.lng = pos.coords.longitude;
+                teks.innerHTML = `✅ Lat: ${pos.coords.latitude.toFixed(6)}<br>Lng: ${pos.coords.longitude.toFixed(6)}`;
+            },
+            () => { teks.textContent = '⚠️ Izinkan lokasi!'; },
+            { enableHighAccuracy: true, timeout: 8000 }
+        );
+    }
+}
+
+function simpanAbsen() {
+    const nama = document.getElementById('nama').value;
+    const pin = document.getElementById('pin').value;
+    const jenis = document.getElementById('jenis-absen').value;
+    const pesan = document.getElementById('pesan');
+
+    if (!nama || !pin) return tampilkanPesan('⚠️ Lengkapi data!', 'error');
+    if (!fotoBase64) return tampilkanPesan('📸 Ambil foto dulu!', 'error');
+
+    const karyawan = JSON.parse(localStorage.getItem('daftarKaryawan') || '[]');
+    const valid = karyawan.find(k => k.nama === nama && k.pin === pin);
+    if (!valid) return tampilkanPesan('❌ Nama atau PIN salah!', 'error');
+
+    const tanggalSimpan = new Date().toISOString().split('T')[0];
+    const hariIni = new Date().toLocaleDateString('id-ID');
+    const jamSekarang = new Date().toLocaleTimeString('id-ID');
+
+    let dataAbsen = JSON.parse(localStorage.getItem('dataAbsen') || '[]');
+    const sudahAbsen = dataAbsen.find(a => a.nama === nama && a.tanggal === tanggalSimpan && a.jenis === jenis);
+    if (sudahAbsen) return tampilkanPesan(`✅ Sudah absen ${jenis} hari ini!`, 'error');
+
+    dataAbsen.unshift({
+        id: Date.now(), nama, jenis, foto: fotoBase64, lokasi: lokasiSaatIni,
+        tanggal: tanggalSimpan, hari: hariIni, jam: jamSekarang
+    });
+    localStorage.setItem('dataAbsen', JSON.stringify(dataAbsen));
+
+    tampilkanPesan('✅ Absen berhasil! Terima kasih!', 'success');
+    setTimeout(() => {
+        document.getElementById('pin').value = '';
+        document.getElementById('foto-preview').classList.add('hidden');
+        document.getElementById('video').classList.remove('hidden');
+        fotoBase64 = '';
+    }, 2000);
+}
+
+function tampilkanPesan(teks, tipe) {
+    const pesan = document.getElementById('pesan');
+    pesan.innerHTML = `<div class="alert alert-${tipe === 'success' ? 'success' : 'error'}">${teks}</div>`;
+    setTimeout(() => pesan.innerHTML = '', 4000);
+}
+</script>
+</body>
+</html>
